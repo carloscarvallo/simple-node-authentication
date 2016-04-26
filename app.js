@@ -39,7 +39,10 @@ app.use(sessions({
     cookieName: 'session',
     secret: 'secret123123123',
     duration: 30 * 60 * 1000,
-    activeDuration: 5 * 60 * 1000
+    activeDuration: 5 * 60 * 1000,
+    httpOnly: true, // no dejes que javascript acceda a los cookies
+    secure: true, // cookies solo con https
+    ephemeral: true // borrar cookie cuando el browser cierra
 }));
 
 app.use(csrf());
