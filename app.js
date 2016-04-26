@@ -2,6 +2,7 @@ var bodyParser = require('body-parser');
 var express = require('express');
 var app = express();
 var bcrypt = require('bcryptjs');
+var morgan = require('morgan');
 var mongoose = require('mongoose');
 var database = require('./config/database');
 var sessions = require('client-sessions');
@@ -30,6 +31,7 @@ app.set('view engine', 'jade');
 app.locals.pretty = true;
 
 // middleware
+app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(sessions({
@@ -39,12 +41,11 @@ app.use(sessions({
     activeDuration: 5 * 60 * 1000
 }));
 
-// custom middleware
 app.use(function(req, res, next) {
-    if (req.session & req.session.user) {
+    if (req.session && req.session.user) {
         User.findOne({ email: req.session.user.email }, function(err, user) {
             if (user) {
-                // para tener acceso posteriormente
+                //console.log('me encontraron en la base de datos ', user);
                 req.user = user;
                 delete req.user.password;
                 req.session.user = req.user;
@@ -58,6 +59,7 @@ app.use(function(req, res, next) {
 });
 
 function requireLogin(req, res, next) {
+
     if (!req.user) {
         res.redirect('/login');
     } else {
@@ -104,7 +106,13 @@ app.post('/login', function(req, res) {
             res.render('login.jade', { error: 'Invalid email or password' });
         } else {
             if (bcrypt.compareSync(req.body.password, user.password)) {
+                
+                //console.log('EXISTE!');
+                
                 req.session.user = user; // set-cookie: session={ email: '...', password: '....', '...' }
+                
+                //console.log('LOGIN SESSION ', req.session.user);
+                
                 res.redirect('/dashboard');
             } else {
                 res.render('login.jade', { error: 'Invalid email or password' });
