@@ -2,6 +2,7 @@ var bodyParser = require('body-parser');
 var express = require('express');
 var app = express();
 var bcrypt = require('bcryptjs');
+var csrf = require('csurf');
 var morgan = require('morgan');
 var mongoose = require('mongoose');
 var database = require('./config/database');
@@ -41,6 +42,8 @@ app.use(sessions({
     activeDuration: 5 * 60 * 1000
 }));
 
+app.use(csrf());
+
 app.use(function(req, res, next) {
     if (req.session && req.session.user) {
         User.findOne({ email: req.session.user.email }, function(err, user) {
@@ -72,7 +75,7 @@ app.get('/', function(req, res) {
 });
 
 app.get('/register', function(req, res) {
-    res.render('register.jade');
+    res.render('register.jade', { csrfToken: req.csrfToken() });
 });
 
 app.post('/register', function(req, res) {
@@ -97,7 +100,7 @@ app.post('/register', function(req, res) {
 });
 
 app.get('/login', function(req, res) {
-    res.render('login.jade');
+    res.render('login.jade', { csrfToken: req.csrfToken() });
 });
 
 app.post('/login', function(req, res) {
